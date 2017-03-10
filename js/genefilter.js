@@ -53,18 +53,16 @@ GeneFilter.prototype._transform = function (obj,enc,cb) {
         this.prev_gene = gene;
         this.stream.resume();
       } else {
-        console.log("Previous gene before this position is ",this.prev_gene.geneid,this.prev_gene.chromosome,this.prev_gene.start,this.prev_gene.end);
-        console.log("First gene after this position is ",gene.geneid,gene.chromosome,gene.start);
-        console.dir(obj);
         this.first_gene = gene;
 
         obj.UPSTREAM_PROTEIN_ENCODING_GENE_ID = this.prev_gene.geneid;
         obj.DOWNSTREAM_PROTEIN_ENCODING_GENE_ID = this.first_gene.geneid;
         obj.UPSTREAM_PROTEIN_ENCODING_GENE_DISTANCE = obj.CHR_POS - this.prev_gene.end;
         obj.DOWNSTREAM_PROTEIN_ENCODING_GENE_DISTANCE = this.first_gene.start - obj.CHR_POS;
-
         this.stream.removeAllListeners('data');
         this.stream.removeListener('end',this.stream.end_cb);
+
+        this.push(obj);
         cb();
       }
     });
