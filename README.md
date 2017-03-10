@@ -16,4 +16,6 @@ Grab
 
 https://www.ebi.ac.uk/gwas/api/search/downloads/alternative - extract out filename from headers (includes ensembl release number)
 
-filter rows based upon the entrez gene  id start and end positions within a given distance
+filter rows based upon the entrez gene  id start and end positions within 100,000 base window. Sort by chromosome and position.
+Stream through list, accepting entries where there is no other gene closer than the target gene - read from stream of genes with start
+and end. Keep track of the last gene seen, and move to first gene after SNP position.
