@@ -1,0 +1,22 @@
+{
+  "name": "node-gwas_catalog-sync",
+  "version": "0.0.1",
+  "description": "Convert list of entrez gene ids / HGNC to ensembl gene",
+  "main": "js/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hirenj/node-gwas_catalog-sync.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hirenj/node-gwas_catalog-sync/issues"
+  },
+  "homepage": "https://github.com/hirenj/node-gwas_catalog-sync",
+  "dependencies": {
+    "csv-parse": "^1.2.0"
+  }
+}
