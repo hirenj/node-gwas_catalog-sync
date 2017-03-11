@@ -5,6 +5,8 @@ const csv = require('csv-parse');
 const GeneFilter = require('./genefilter').GeneFilter;
 const GeneMapping = require('./genefilter').GeneMapping;
 
+const stringify = require('csv-stringify');
+
 
 let gene_translation = new Promise((resolve,reject) => {
   let csv_parser = csv({columns: true, delimiter: '\t'});
@@ -24,5 +26,6 @@ gene_translation.then( mappings => {
   let catalog_stream = fs.createReadStream('sorted_gwas.tsv');
   return catalog_stream.pipe(csv({columns: true, delimiter: '\t', relax: true})).pipe(filter);
 }).then( output => {
-  output.on('data', dat => { if (dat.INTERGENIC == '1') { console.log(dat); }});
+  // output.on('data', dat => { if (dat.INTERGENIC == '1') { console.log(dat); }});
+  output.pipe(stringify({ header: true, delimiter: '\t' })).pipe(process.stdout);
 }).catch( err => console.log(err));

@@ -1,7 +1,7 @@
 {
   "name": "node-gwas_catalog-sync",
   "version": "0.0.1",
-  "description": "Convert list of entrez gene ids / HGNC to ensembl gene",
+  "description": "Convert EBI GWAS catalog to JSON format, adding in mapped closest protein encoding gene",
   "main": "js/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/hirenj/node-gwas_catalog-sync",
   "dependencies": {
-    "csv-parse": "^1.2.0"
+    "csv-parse": "^1.2.0",
+    "csv-stringify": "^1.0.4"
   }
 }

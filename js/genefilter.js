@@ -18,39 +18,44 @@ function GeneFilter(gene_stream,mappings) {
 util.inherits(GeneFilter, Transform);
 
 GeneFilter.prototype._transform = function (obj,enc,cb) {
-  obj.CHR_ID = parseInt(obj.CHR_ID);
   obj.CHR_POS = parseInt(obj.CHR_POS);
-  if ( ! obj.CHR_POS || ! obj.CHR_ID ) {
-    // FIXME We need to sort out CHR x positions and sorting..
-    cb();
-    return;
+  obj.chr = (obj.CHR_ID.match(/\d+/) || [obj.CHR_ID])[0];
+  if (['MT','X','Y'].indexOf(obj.chr) < 0) {
+    obj.chr = parseInt(obj.chr);
+  } else {
+    obj.chr = [-3,-2,-1][  ['MT','X','Y'].indexOf(obj.chr) ];
   }
-  if (obj.INTERGENIC !== '1') {
-    obj.UPSTREAM_PROTEIN_ENCODING_GENE_ID = null;
-    obj.DOWNSTREAM_PROTEIN_ENCODING_GENE_ID = null;
-    obj.UPSTREAM_PROTEIN_ENCODING_GENE_DISTANCE = null;
-    obj.DOWNSTREAM_PROTEIN_ENCODING_GENE_DISTANCE = null;
+  if ( ! obj.CHR_POS || ! obj.chr || obj.INTERGENIC !== '1') {
+    obj.UPSTREAM_PROTEIN_ENCODING_GENE_ID = 'NA';
+    obj.DOWNSTREAM_PROTEIN_ENCODING_GENE_ID = 'NA';
+    obj.UPSTREAM_PROTEIN_ENCODING_GENE_DISTANCE = 'NA';
+    obj.DOWNSTREAM_PROTEIN_ENCODING_GENE_DISTANCE = 'NA';
+    delete obj.chr;
     this.push(obj);
     cb();
     return;
   }
   if ( this.stream && ( ! this.first_gene || 
-                        this.first_gene.chromosome < obj.CHR_ID || 
-                        ( this.first_gene.chromosome == obj.CHR_ID && this.first_gene.start < obj.CHR_POS)
+                        this.first_gene.chromosome < obj.chr ||
+                        ( this.first_gene.chromosome == obj.chr && this.first_gene.start < obj.CHR_POS)
                       ) ) {
     if (this.first_gene) {
       this.prev_gene = this.first_gene;
       this.first_gene = null;
     }
     this.stream.on('data',(gene) => {
-      gene.chromosome = parseInt(gene.chromosome);
+      if (['MT','X','Y'].indexOf(gene.chromosome) >= 0) {
+        gene.chromosome = [-3,-2,-1][  ['MT','X','Y'].indexOf(gene.chromosome) ];
+      } else {
+        gene.chromosome = parseInt(gene.chromosome);
+      }
       gene.start = parseInt(gene.start);
       gene.end = parseInt(gene.end);
       gene.geneid = this.mappings[gene.geneid];
 
       this.stream.pause();
-      if (gene.chromosome < obj.CHR_ID ||
-          (gene.chromosome == obj.CHR_ID && gene.start < obj.CHR_POS ) ) {
+      if (gene.chromosome < obj.chr ||
+          (gene.chromosome == obj.chr && gene.start < obj.CHR_POS ) ) {
         this.prev_gene = gene;
         this.stream.resume();
       } else {
@@ -61,7 +66,7 @@ GeneFilter.prototype._transform = function (obj,enc,cb) {
         obj.DOWNSTREAM_PROTEIN_ENCODING_GENE_DISTANCE = this.first_gene.start - obj.CHR_POS;
         this.stream.removeAllListeners('data');
         this.stream.removeListener('end',this.stream.end_cb);
-
+        delete obj.chr;
         this.push(obj);
         cb();
       }
@@ -75,7 +80,7 @@ GeneFilter.prototype._transform = function (obj,enc,cb) {
     obj.DOWNSTREAM_PROTEIN_ENCODING_GENE_ID = this.first_gene.geneid;
     obj.UPSTREAM_PROTEIN_ENCODING_GENE_DISTANCE = obj.CHR_POS - this.prev_gene.end;
     obj.DOWNSTREAM_PROTEIN_ENCODING_GENE_DISTANCE = this.first_gene.start - obj.CHR_POS;
-
+    delete obj.chr;
     this.push(obj);
     cb();
   }
