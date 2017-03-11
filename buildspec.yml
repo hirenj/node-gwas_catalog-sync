@@ -1,5 +1,26 @@
-install:
-  - curl -O 'ftp://ftp.ncbi.nih.gov/gene/DATA/gene2ensembl.gz'
-  - gunzip gene2ensembl.gz
-  - (ensembl_release=87; echo -e "chromosome\tstart\tend\tgeneid"; curl "http://ftp.ensembl.org/pub/release-${ensembl_release}/gtf/homo_sapiens/Homo_sapiens.GRCh38.${ensembl_release}.chr.gtf.gz" | gunzip | awk -F$'\t' '$3 == "gene" && $9 ~ /protein_coding/ {  split($9,a,"\""); print $1 FS $4 FS $5 FS a[2] }' | sort -t $'\t' -n -k 1 ) > gene_positions.tsv
-  - (head -1 gwas_catalog_v1.0.1-associations_e87_r2017-03-06.tsv; tail -n+2 gwas_catalog_v1.0.1-associations_e87_r2017-03-06.tsv | sort -t $'\t' -n -k 12 -k 13) > sorted_gwas.tsv
+version: 0.1
+
+phases:
+  install:
+    commands:
+      - npm install
+  pre_build:
+    commands:
+      - compara_version=$(curl -Sss 'https://rest.ensembl.org/info/comparas?' -H 'Content-type:text/xml' | grep 'release' | sed -e 's/.*release="//' -e 's/".*//')
+      - checkversion --fail-on-match --print-remote --remote 'http://rest.ensemblgenomes.org/info/eg_version' --regex '(\d+)' > ensembl_genomes_version.txt
+      - testversion 'gwas_associations.json' --static "\$compara_version"
+  build:
+    commands:
+      - curl -O 'ftp://ftp.ncbi.nih.gov/gene/DATA/gene2ensembl.gz'
+      - gunzip gene2ensembl.gz
+      - (ensembl_release=87; echo -e "chromosome\tstart\tend\tgeneid"; curl "http://ftp.ensembl.org/pub/release-${ensembl_release}/gtf/homo_sapiens/Homo_sapiens.GRCh38.${ensembl_release}.chr.gtf.gz" | gunzip | awk -F$'\t' '$3 == "gene" && $9 ~ /protein_coding/ {  split($9,a,"\""); print $1 FS $4 FS $5 FS a[2] }' | sort -t $'\t' -n -k 1 ) > gene_positions.tsv
+      - (head -1 gwas_catalog_v1.0.1-associations_e87_r2017-03-06.tsv; tail -n+2 gwas_catalog_v1.0.1-associations_e87_r2017-03-06.tsv | sort -t $'\t' -n -k 12 -k 13) > sorted_gwas.tsv
+      - node js/index.js
+      - mkdir -p dist
+      - cp mapped.json dist/gwas_associations.json
+  post_build:
+    commands:
+      - echo "Skipping post_build"
+artifacts:
+  files:
+    - dist
