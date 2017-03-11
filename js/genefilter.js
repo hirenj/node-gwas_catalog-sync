@@ -34,17 +34,18 @@ GeneFilter.prototype._transform = function (obj,enc,cb) {
     cb();
     return;
   }
-
   if ( this.stream && ( ! this.first_gene || 
                         this.first_gene.chromosome < obj.CHR_ID || 
                         ( this.first_gene.chromosome == obj.CHR_ID && this.first_gene.start < obj.CHR_POS)
                       ) ) {
     if (this.first_gene) {
+      this.prev_gene = this.first_gene;
       this.first_gene = null;
     }
     this.stream.on('data',(gene) => {
       gene.chromosome = parseInt(gene.chromosome);
       gene.start = parseInt(gene.start);
+      gene.end = parseInt(gene.end);
       gene.geneid = this.mappings[gene.geneid];
 
       this.stream.pause();
@@ -54,7 +55,6 @@ GeneFilter.prototype._transform = function (obj,enc,cb) {
         this.stream.resume();
       } else {
         this.first_gene = gene;
-
         obj.UPSTREAM_PROTEIN_ENCODING_GENE_ID = this.prev_gene.geneid;
         obj.DOWNSTREAM_PROTEIN_ENCODING_GENE_ID = this.first_gene.geneid;
         obj.UPSTREAM_PROTEIN_ENCODING_GENE_DISTANCE = obj.CHR_POS - this.prev_gene.end;

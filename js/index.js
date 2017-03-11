@@ -24,5 +24,5 @@ gene_translation.then( mappings => {
   let catalog_stream = fs.createReadStream('sorted_gwas.tsv');
   return catalog_stream.pipe(csv({columns: true, delimiter: '\t', relax: true})).pipe(filter);
 }).then( output => {
-  output.on('data', dat => console.log(dat) );
+  output.on('data', dat => { if (dat.INTERGENIC == '1') { console.log(dat); }});
 }).catch( err => console.log(err));
