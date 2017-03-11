@@ -5,8 +5,45 @@ const csv = require('csv-parse');
 const GeneFilter = require('./genefilter').GeneFilter;
 const GeneMapping = require('./genefilter').GeneMapping;
 
+const StreamTransform = require('jsonpath-object-transform').Stream;
+
 const stringify = require('csv-stringify');
 
+const template = {
+  'data' : {
+    "$[?(@.CHR_ID && @.INTERGENIC !== '1')].geneid" : {
+      "chr" : "$.CHR_ID",
+      "pos" : "$.CHR_POS",
+      "p-value" : "$['P-VALUE']",
+      "snp" : "$.SNP_ID_CURRENT",
+      "trait" : "$.MAPPED_TRAIT",
+      "trait_uri" : "$.MAPPED_TRAIT_URI",
+      "geneid" : "$.SNP_GENE_IDS"
+    },
+    "$[?(@.CHR_ID && @.INTERGENIC === '1')].geneid" : {
+      "chr" : "$.CHR_ID",
+      "pos" : "$.CHR_POS",
+      "p-value" : "$['P-VALUE']",
+      "snp" : "$.SNP_ID_CURRENT",
+      "trait_uri" : "$.MAPPED_TRAIT_URI",
+      "intergenic" : true,
+      "snp_position" : "downstream",
+      "geneid" : "$.UPSTREAM_PROTEIN_ENCODING_GENE_ID",
+      "distance" : "$.UPSTREAM_PROTEIN_ENCODING_GENE_DISTANCE"
+    },
+    "$[?(@.CHR_ID && @.INTERGENIC === '1' && true == true)].geneid" : {
+      "chr" : "$.CHR_ID",
+      "pos" : "$.CHR_POS",
+      "p-value" : "$['P-VALUE']",
+      "snp" : "$.SNP_ID_CURRENT",
+      "trait_uri" : "$.MAPPED_TRAIT_URI",
+      "intergenic" : true,
+      "snp_position" : "upstream",
+      "geneid" : "$.DOWNSTREAM_PROTEIN_ENCODING_GENE_ID",
+      "distance" : "$.DOWNSTREAM_PROTEIN_ENCODING_GENE_DISTANCE"
+    }
+  }
+};
 
 let gene_translation = new Promise((resolve,reject) => {
   let csv_parser = csv({columns: true, delimiter: '\t'});
@@ -27,5 +64,6 @@ gene_translation.then( mappings => {
   return catalog_stream.pipe(csv({columns: true, delimiter: '\t', relax: true})).pipe(filter);
 }).then( output => {
   // output.on('data', dat => { if (dat.INTERGENIC == '1') { console.log(dat); }});
-  output.pipe(stringify({ header: true, delimiter: '\t' })).pipe(process.stdout);
+  output.pipe(StreamTransform(template, 'data',{})).pipe(fs.createWriteStream('mapped.json'));
+  output.pipe(stringify({ header: true, delimiter: '\t' })).pipe(fs.createWriteStream('remapped.tsv'));
 }).catch( err => console.log(err));

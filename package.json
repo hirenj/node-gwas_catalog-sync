@@ -18,6 +18,7 @@
   "homepage": "https://github.com/hirenj/node-gwas_catalog-sync",
   "dependencies": {
     "csv-parse": "^1.2.0",
-    "csv-stringify": "^1.0.4"
+    "csv-stringify": "^1.0.4",
+    "jsonpath-object-transform" : "hirenj/jsonpath-object-transform"
   }
 }
