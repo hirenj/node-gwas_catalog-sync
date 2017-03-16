@@ -19,6 +19,7 @@
   "dependencies": {
     "csv-parse": "^1.2.0",
     "csv-stringify": "^1.0.4",
-    "jsonpath-object-transform" : "hirenj/jsonpath-object-transform"
+    "jsonpath-object-transform": "hirenj/jsonpath-object-transform",
+    "nconf": "^0.8.4"
   }
 }

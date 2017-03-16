@@ -4,10 +4,13 @@ const fs = require('fs');
 const csv = require('csv-parse');
 const GeneFilter = require('./genefilter').GeneFilter;
 const GeneMapping = require('./genefilter').GeneMapping;
+const nconf = require('nconf');
 
 const StreamTransform = require('jsonpath-object-transform').Stream;
 
 const stringify = require('csv-stringify');
+
+nconf.argv();
 
 const template = {
   'data' : {
@@ -42,6 +45,15 @@ const template = {
       "geneid" : "$.DOWNSTREAM_PROTEIN_ENCODING_GENE_ID",
       "distance" : "$.DOWNSTREAM_PROTEIN_ENCODING_GENE_DISTANCE"
     }
+  },
+  "metadata" : {
+    "mimetype" : "application/json+association",
+    "data-version" : "$.(version)",
+    "title" : "EBI GWAS catalog",
+    "software" : {"ARRAY": "true", "0" : { "name" : "hirenj/node-gwas_catalog-sync", "version" : "$.(git)" , "run-date" : "$.(timestamp)" }},
+    "sample": {
+      "species" : 9606
+    }
   }
 };
 
@@ -64,6 +76,6 @@ gene_translation.then( mappings => {
   return catalog_stream.pipe(csv({columns: true, delimiter: '\t', relax: true})).pipe(filter);
 }).then( output => {
   // output.on('data', dat => { if (dat.INTERGENIC == '1') { console.log(dat); }});
-  output.pipe(StreamTransform(template, 'data',{})).pipe(fs.createWriteStream('mapped.json'));
+  output.pipe(StreamTransform(template, 'data',{ version: nconf.get('version'), timestamp: nconf.get('timestamp'), git: nconf.get('git') })).pipe(fs.createWriteStream('mapped.json'));
   output.pipe(stringify({ header: true, delimiter: '\t' })).pipe(fs.createWriteStream('remapped.tsv'));
 }).catch( err => console.log(err));
