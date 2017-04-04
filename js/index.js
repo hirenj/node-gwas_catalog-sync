@@ -52,7 +52,8 @@ const template = {
     "title" : "EBI GWAS catalog",
     "software" : {"ARRAY": "true", "0" : { "name" : "hirenj/node-gwas_catalog-sync", "version" : "$.(git)" , "run-date" : "$.(timestamp)" }},
     "sample": {
-      "species" : 9606
+      "species" : 9606,
+      "tissue"  : "bto:0001489"
     }
   }
 };
