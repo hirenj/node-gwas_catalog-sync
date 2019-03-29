@@ -13,7 +13,7 @@ phases:
       - [[ "\$ncbi_mapping_ensembl" -le "\$ensembl_version" ]] && echo "NCBI mapping Ensembl version is less than or equal to the Ensembl version"
       - [[ "\$gwas_catalog_ensembl" -eq "\$ncbi_mapping_ensembl" ]] && echo "Matching Ensembl versions at GWAS catalog and NCBI"
       - echo "\$ncbi_mapping_ensembl" > ensembl_version.txt
-      - testversion 'gwas_associations.json' --static "\$gwas_catalog_version"
+      - testversion 'gwas_associations.json' --static "\$gwas_catalog_version" || exit 2
   build:
     commands:
       - ensembl_version=$(<ensembl_version.txt)
