@@ -14,7 +14,7 @@ nconf.argv();
 
 const template = {
   'data' : {
-    "$[?(@.CHR_ID && @.INTERGENIC !== '1')].geneid" : {
+    "$[?(@.CHR_ID && @.INTERGENIC !== '1' && @.SNP_GENE_IDS)].geneid" : {
       "chr" : "$.CHR_ID",
       "pos" : "$.CHR_POS",
       "p-value" : "$['P-VALUE']",
@@ -23,7 +23,7 @@ const template = {
       "trait_uri" : "$.MAPPED_TRAIT_URI",
       "geneid" : "$.SNP_GENE_IDS"
     },
-    "$[?(@.CHR_ID && @.INTERGENIC === '1')].geneid" : {
+    "$[?(@.CHR_ID && @.INTERGENIC === '1' && @.UPSTREAM_PROTEIN_ENCODING_GENE_ID)].geneid" : {
       "chr" : "$.CHR_ID",
       "pos" : "$.CHR_POS",
       "p-value" : "$['P-VALUE']",
@@ -35,7 +35,7 @@ const template = {
       "geneid" : "$.UPSTREAM_PROTEIN_ENCODING_GENE_ID",
       "distance" : "$.UPSTREAM_PROTEIN_ENCODING_GENE_DISTANCE"
     },
-    "$[?(@.CHR_ID && @.INTERGENIC === '1' && true == true)].geneid" : {
+    "$[?(@.CHR_ID && @.INTERGENIC === '1' && @.DOWNSTREAM_PROTEIN_ENCODING_GENE_ID )].geneid" : {
       "chr" : "$.CHR_ID",
       "pos" : "$.CHR_POS",
       "p-value" : "$['P-VALUE']",

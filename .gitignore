@@ -1,3 +1,4 @@
+node_modules
 gene2ensembl
 *version.txt
 *.tsv
