@@ -19,7 +19,7 @@ util.inherits(GeneFilter, Transform);
 
 GeneFilter.prototype._transform = function (obj,enc,cb) {
   obj.CHR_POS = parseInt(obj.CHR_POS);
-  obj.SNP_GENE_IDS = obj.SNP_GENE_IDS.split(/[ ,]+/).map( gene => this.mappings[gene] || '' ).join(',').replace(/,$/g,'').replace(/^,/g,'');
+  obj.SNP_GENE_IDS = obj.SNP_GENE_IDS.split(/[ ,]+/).map( gene => this.mappings[gene] ).filter( x => x).join(',');
   obj.chr = (obj.CHR_ID.match(/\d+/) || [obj.CHR_ID])[0];
   if (['MT','X','Y'].indexOf(obj.chr) < 0) {
     obj.chr = parseInt(obj.chr);
