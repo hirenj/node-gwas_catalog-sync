@@ -12,6 +12,8 @@ const stringify = require('csv-stringify');
 
 nconf.argv();
 
+const workdir = nconf.get('workdir');
+
 const template = {
   'data' : {
     "$[?(@.CHR_ID && @.INTERGENIC !== '1' && @.SNP_GENE_IDS)].geneid" : {
@@ -62,7 +64,7 @@ const template = {
 
 let gene_translation = new Promise((resolve,reject) => {
   let csv_parser = csv({columns: true, delimiter: '\t'});
-  let mappings = fs.createReadStream('gene2ensembl');
+  let mappings = fs.createReadStream(`${workdir}/gene2ensembl`);
   let mapper = new GeneMapping();
   let out_stream = mappings.pipe(csv_parser).pipe(mapper);
   mapper.on('finish', () => {
@@ -72,10 +74,10 @@ let gene_translation = new Promise((resolve,reject) => {
 });
 
 gene_translation.then( mappings => {
-  let positions_stream = fs.createReadStream('gene_positions.tsv').pipe(csv({columns:true,delimiter:"\t"}));
+  let positions_stream = fs.createReadStream(`${workdir}/gene_positions.tsv`).pipe(csv({columns:true,delimiter:"\t"}));
   return new GeneFilter(positions_stream,mappings);
 }).then( filter => {
-  let catalog_stream = fs.createReadStream('sorted_gwas.tsv');
+  let catalog_stream = fs.createReadStream(`${workdir}/sorted_gwas.tsv`);
   return catalog_stream.pipe(csv({columns: true, delimiter: '\t', relax: true})).pipe(filter);
 }).then( output => {
   // output.on('data', dat => { if (dat.INTERGENIC == '1') { console.log(dat); }});

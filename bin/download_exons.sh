@@ -1,6 +1,7 @@
 #!/bin/bash
 
-target_version=$1
+target_version="$1"
+outdir="$2"
 
 echo "Getting exon data for Ensembl release $1"
 
@@ -11,4 +12,4 @@ echo "Getting exon data for Ensembl release $1"
  	| gunzip \
  	| awk -F$'\t' '$3 == "gene" && $9 ~ /protein_coding/ {  split($9,a,"\""); print $1 FS $4 FS $5 FS a[2] }'\
 	| sort -n -k 1 -k 2
- ) > gene_positions.tsv
+ ) > "$outdir/gene_positions.tsv"
