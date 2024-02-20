@@ -21,4 +21,4 @@ RUN npm install
 # Switch back to dialog for any ad-hoc use of apt-get
 ENV DEBIAN_FRONTEND=
 
-CMD /build/bin/prebuild.sh /build/bin/build.sh
+CMD /build/bin/prebuild.sh && /build/bin/build.sh
