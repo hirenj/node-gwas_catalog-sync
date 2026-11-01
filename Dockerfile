@@ -4,7 +4,7 @@ FROM node:16-bookworm
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
-    && apt-get install -y less awscli \
+    && apt-get install -y less awscli unzip jq \
 #
     && apt-get autoremove -y \
     && apt-get clean -y \

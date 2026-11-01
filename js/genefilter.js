@@ -17,6 +17,27 @@ function GeneFilter(gene_stream,mappings) {
 
 util.inherits(GeneFilter, Transform);
 
+// prev_gene/first_gene are only valid neighbours of obj when they're on the same chromosome -
+// at a chromosome boundary (or before the first/after the last gene on a chromosome) the nearest
+// gene found by the merge-join can be tens of millions of bases away on a different chromosome,
+// producing a nonsensical (and sometimes deeply negative) distance. Treat "no gene on this side,
+// on this chromosome" as "no neighbour" rather than fabricating a cross-chromosome distance.
+//
+// Separately, a same-chromosome neighbour can still overlap obj (nested or overlapping gene
+// annotations), making the raw subtraction negative even though the chromosome is right - that's
+// not a "gene is far away in the wrong place" bug, just "the SNP is within this gene's span", so
+// clamp to 0 rather than publish a negative distance.
+function setNeighbourFields(obj,prevGene,firstGene) {
+  if (prevGene && prevGene.chromosome === obj.chr) {
+    obj.UPSTREAM_PROTEIN_ENCODING_GENE_ID = prevGene.geneid;
+    obj.UPSTREAM_PROTEIN_ENCODING_GENE_DISTANCE = Math.max(0, obj.CHR_POS - prevGene.end);
+  }
+  if (firstGene && firstGene.chromosome === obj.chr) {
+    obj.DOWNSTREAM_PROTEIN_ENCODING_GENE_ID = firstGene.geneid;
+    obj.DOWNSTREAM_PROTEIN_ENCODING_GENE_DISTANCE = Math.max(0, firstGene.start - obj.CHR_POS);
+  }
+}
+
 GeneFilter.prototype._transform = function (obj,enc,cb) {
   obj.CHR_POS = parseInt(obj.CHR_POS);
   obj.SNP_GENE_IDS = obj.SNP_GENE_IDS.split(/[ ,]+/).map( gene => this.mappings[gene] ).filter( x => x).join(',');
@@ -61,10 +82,7 @@ GeneFilter.prototype._transform = function (obj,enc,cb) {
         this.stream.resume();
       } else {
         this.first_gene = gene;
-        obj.UPSTREAM_PROTEIN_ENCODING_GENE_ID = this.prev_gene.geneid;
-        obj.DOWNSTREAM_PROTEIN_ENCODING_GENE_ID = this.first_gene.geneid;
-        obj.UPSTREAM_PROTEIN_ENCODING_GENE_DISTANCE = obj.CHR_POS - this.prev_gene.end;
-        obj.DOWNSTREAM_PROTEIN_ENCODING_GENE_DISTANCE = this.first_gene.start - obj.CHR_POS;
+        setNeighbourFields(obj,this.prev_gene,this.first_gene);
         this.stream.removeAllListeners('data');
         this.stream.removeListener('end',this.stream.end_cb);
         delete obj.chr;
@@ -77,10 +95,7 @@ GeneFilter.prototype._transform = function (obj,enc,cb) {
     this.stream.resume();
   } else {
     // The first gene is after this gene.
-    obj.UPSTREAM_PROTEIN_ENCODING_GENE_ID = this.prev_gene.geneid;
-    obj.DOWNSTREAM_PROTEIN_ENCODING_GENE_ID = this.first_gene.geneid;
-    obj.UPSTREAM_PROTEIN_ENCODING_GENE_DISTANCE = obj.CHR_POS - this.prev_gene.end;
-    obj.DOWNSTREAM_PROTEIN_ENCODING_GENE_DISTANCE = this.first_gene.start - obj.CHR_POS;
+    setNeighbourFields(obj,this.prev_gene,this.first_gene);
     delete obj.chr;
     this.push(obj);
     cb();
