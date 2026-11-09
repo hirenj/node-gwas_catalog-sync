@@ -1,4 +1,10 @@
 #!/bin/bash
+# set -euo pipefail: without it, a failed/malformed response here (curl error, or a non-JSON body
+# jq can't parse) left `ensembl_version` empty but didn't stop the script - build.sh then carried
+# on with an empty version number baked into download URLs, turning one clear failure here into a
+# confusing cascade of downstream errors (a 404 HTML page downloaded in place of a .gtf.gz, then
+# "gzip: stdin: not in gzip format" trying to unpack it).
+set -euo pipefail
 
 workdir=${1:-/work}
 outdir=${2:-/dist}
@@ -11,6 +17,6 @@ outdir=${2:-/dist}
 # Ensembl release for the GTF download - NCBI's gene2ensembl mapping and the GWAS catalog's gene
 # ids are both continuously updated against current Ensembl ids, so there's no cross-release skew
 # to protect against here.
-ensembl_version=$(curl -Sss 'https://rest.ensembl.org/info/data?' -H 'Content-type:application/json' | jq -r '.releases[0]')
+ensembl_version=$(curl --fail -Sss 'https://rest.ensembl.org/info/data?' -H 'Content-type:application/json' | jq -r '.releases[0]')
 echo "$ensembl_version" > ensembl_version.txt
 
